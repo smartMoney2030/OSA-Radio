@@ -277,6 +277,1271 @@
                         <div class="absolute -inset-4 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-full blur-3xl opacity-50 animate-pulse-slow"></div>
                         
                         <!-- Main Player Card -->
+                        <div class="relative glass-strong rounded-3xl p-6 sm:p-8 border border-white/10 now-playing-glow w-full overflow-hidden">
+                            <div class="flex flex-col md:flex-row lg:flex-col xl:flex-row gap-6 sm:gap-8 items-center">
+                                
+                                <!-- Album Art / Video Frame -->
+                                <div class="relative w-full max-w-[240px] sm:max-w-[280px] aspect-square flex-shrink-0 group overflow-hidden rounded-2xl shadow-2xl bg-darker border border-white/10 flex items-center justify-center mx-auto">
+                                    
+                                    <!-- Video Element -->
+                                    <video id="main-player-video" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0 pointer-events-none z-10" playsinline></video>
+                                    
+                                    <!-- Fallback SVG -->
+                                    <svg id="album-art-fallback" viewBox="0 0 320 160" class="w-3/4 h-auto opacity-30 z-0" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="65" cy="45" r="24" stroke="white" stroke-width="13" fill="none" />
+                                        <polygon points="56,31 74,45 56,59" fill="none" stroke="#f97316" stroke-width="3.5" stroke-linejoin="round" />
+                                        <text x="125" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">S</text>
+                                        <text x="205" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">A</text>
+                                        <line x1="28" y1="92" x2="280" y2="92" stroke="white" stroke-width="3.5" />
+                                        <text x="28" y="146" fill="#f97316" font-family="Georgia, 'Times New Roman', serif" font-weight="900" font-size="62" textLength="252" lengthAdjust="spacing">RADIO</text>
+                                    </svg>
+                                    
+                                    <!-- Image Cover -->
+                                    <img id="album-art-img" src="" alt="Album Art" class="absolute inset-0 w-full h-full object-cover hidden-view z-0">
+                                    
+                                    <!-- Live Badge -->
+                                    <div class="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-2 z-20">
+                                        <span id="player-live-dot" class="w-2 h-2 rounded-full bg-gray-500"></span>
+                                        <span id="player-live-text" class="text-xs font-bold uppercase tracking-wider text-gray-400">Standby</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Controls -->
+                                <div class="flex-1 w-full min-w-0 space-y-6 sm:space-y-8">
+                                    <div class="truncate">
+                                        <div class="text-primary text-sm font-semibold mb-1 truncate" id="current-track-type">Station Offline</div>
+                                        <h3 class="text-3xl font-display font-bold text-white mb-2 truncate" id="current-track-title">Awaiting Tracks</h3>
+                                        <p class="text-[#C1F6ED]/70 text-lg truncate" id="current-track-artist">Add tracks in Studio</p>
+                                    </div>
+                                    
+                                    <!-- Audio Wave Visualization -->
+                                    <div class="h-16 flex items-center justify-center gap-1 opacity-20 transition-opacity duration-300" id="audio-wave-vis">
+                                        <div class="audio-wave">
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Progress Bar -->
+                                    <div class="space-y-2">
+                                        <div class="relative h-2 bg-dark rounded-full overflow-hidden cursor-pointer" onclick="seekTrack(event)" id="progress-container">
+                                            <div id="progress-bar" class="absolute inset-y-0 left-0 w-0 track-progress rounded-full transition-all duration-100 ease-linear"></div>
+                                        </div>
+                                        <div class="flex justify-between text-xs text-primary/70 font-medium">
+                                            <span id="current-time">0:00</span>
+                                            <span id="total-time">0:00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Main Controls -->
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-4 flex-shrink-0">
+                                            <button class="p-3 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition-colors" onclick="skipTrack(-1)">
+                                                <i data-lucide="skip-back" class="w-6 h-6"></i>
+                                            </button>
+                                            
+                                            <button id="play-pause-btn" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all text-darker" onclick="togglePlay()">
+                                                <i data-lucide="play" class="w-6 h-6 sm:w-7 sm:h-7 fill-current ml-1" id="play-icon"></i>
+                                            </button>
+                                            
+                                            <button class="p-3 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition-colors" onclick="skipTrack(1)">
+                                                <i data-lucide="skip-forward" class="w-6 h-6"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-2 sm:gap-3 w-24 sm:w-32">
+                                            <button onclick="toggleMute()" class="text-[#C1F6ED]/70 hover:text-white transition-colors flex-shrink-0">
+                                                <i id="volume-icon-on" data-lucide="volume-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                                                <i id="volume-icon-off" data-lucide="volume-x" class="w-4 h-4 sm:w-5 sm:h-5 hidden-view"></i>
+                                            </button>
+                                            <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" oninput="handleVolumeChange(event)" class="w-full h-1.5 bg-dark border border-primary/20 rounded-lg appearance-none cursor-pointer" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            
+            <!-- Static Control Center & Schedules (Aesthetic matching user template) -->
+            <section class="grid md:grid-cols-3 gap-6">
+                <!-- Stream Info -->
+                <div class="glass rounded-2xl p-6 border border-white/5">
+                    <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                        <i data-lucide="settings-2" class="w-5 h-5 text-primary"></i>
+                        Stream Details
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-primary/10">
+                            <span class="text-sm text-[#C1F6ED]/70">Stream URL</span>
+                            <span class="text-sm font-mono text-primary">osaradio.com</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-primary/10">
+                            <span class="text-sm text-[#C1F6ED]/70">Bitrate</span>
+                            <span class="text-sm font-mono text-white">320 kbps</span>
+                        </div>
+                        <button onclick="shareStream()" class="w-full py-3 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary text-sm font-medium transition-all flex items-center justify-center gap-2 mt-2">
+                            <i data-lucide="share-2" class="w-4 h-4"></i>
+                            Share Stream
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Schedule Preview -->
+                <div class="glass rounded-2xl p-6 border border-white/5">
+                    <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-secondary"></i>
+                        Tonight's Schedule
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 rounded-xl bg-white/5 border-l-2 border-primary">
+                            <div class="text-xs text-primary font-semibold mb-1">22:00 - 00:00</div>
+                            <div class="text-sm font-medium text-white">Night Vibes</div>
+                            <div class="text-xs text-gray-500">Host: DJ Astral</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/5 border-l-2 border-secondary opacity-60">
+                            <div class="text-xs text-secondary font-semibold mb-1">00:00 - 02:00</div>
+                            <div class="text-sm font-medium text-white">Midnight Grooves</div>
+                            <div class="text-xs text-gray-500">Host: Sarah Smooth</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="glass rounded-2xl p-6 border border-white/5">
+                    <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-5 h-5 text-accent"></i>
+                        Stats
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 rounded-2xl bg-white/5 border border-primary/10 text-center">
+                            <div class="text-2xl font-bold text-white mb-1">48h</div>
+                            <div class="text-xs text-[#C1F6ED]/70">Broadcast</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-white/5 border border-primary/10 text-center">
+                            <div class="text-2xl font-bold text-primary mb-1">99.9%</div>
+                            <div class="text-xs text-[#C1F6ED]/70">Uptime</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-white/5 border border-primary/10 text-center">
+                            <div class="text-2xl font-bold text-secondary mb-1" id="stat-tracks">0</div>
+                            <div class="text-xs text-[#C1F6ED]/70">Queue Size</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-white/5 border border-primary/10 text-center">
+                            <div class="text-2xl font-bold text-accent mb-1">AI</div>
+                            <div class="text-xs text-[#C1F6ED]/70">Powered</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= ADMIN LOGIN VIEW ================= -->
+        <div id="login-view" class="hidden flex-col items-center justify-center py-20 animate-fade-in">
+            <div class="glass-strong border border-primary/20 p-8 rounded-2xl shadow-xl w-full max-w-sm">
+                <div class="flex justify-center mb-6">
+                    <div class="p-4 bg-dark rounded-full border border-primary/30 text-primary shadow-[0_0_15px_rgba(63,208,201,0.2)]">
+                        <i data-lucide="lock" class="w-8 h-8"></i>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-display font-bold text-center text-white mb-2">Studio Admin</h2>
+                <p class="text-[#C1F6ED]/70 text-center text-sm mb-6">Please log in to manage the station queue.</p>
+                
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <input id="login-password" type="password" placeholder="Enter admin password" class="w-full bg-dark border border-primary/30 rounded-xl px-4 py-3 text-white placeholder-[#C1F6ED]/40 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                    </div>
+                    <p id="login-error" class="text-accent text-sm text-center hidden-view"></p>
+                    <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-darker font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-transform hover:scale-[1.02] shadow-lg shadow-primary/20">
+                        <i data-lucide="log-in" class="w-5 h-5"></i> <span>Login to Studio</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= ADMIN STUDIO VIEW ================= -->
+        <div id="admin-view" class="hidden space-y-8 animate-fade-in">
+            
+            <!-- Admin Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 glass rounded-2xl p-6 border border-white/5">
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white mb-1">Studio Control Center</h2>
+                    <p class="text-[#C1F6ED]/70">Manage broadcasts, AI tools, and queue</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="clearQueue()" class="px-4 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all text-sm font-medium">
+                        <i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i>
+                        Clear Queue
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Main Control Grid -->
+            <div class="grid lg:grid-cols-3 gap-6">
+                
+                <!-- Left Col: Upload & AI Tools -->
+                <div class="lg:col-span-1 space-y-6">
+                    
+                    <!-- File Upload -->
+                    <div class="glass rounded-2xl p-6 border border-white/5">
+                        <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                            <i data-lucide="upload-cloud" class="w-5 h-5 text-primary"></i>
+                            Upload Content
+                        </h3>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <label class="flex items-center gap-2 p-2 rounded-xl bg-dark/50 cursor-pointer hover:bg-white/10 transition-colors border border-primary/20">
+                                <input type="radio" name="upload-type" value="music" checked class="w-4 h-4 text-primary bg-dark border-primary/50 focus:ring-primary">
+                                <span class="text-sm text-white">Music</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2 rounded-xl bg-dark/50 cursor-pointer hover:bg-white/10 transition-colors border border-accent/20">
+                                <input type="radio" name="upload-type" value="commercial" class="w-4 h-4 text-accent bg-dark border-accent/50 focus:ring-accent">
+                                <span class="text-sm text-white">Ad Spot</span>
+                            </label>
+                        </div>
+
+                        <div id="upload-zone" class="upload-zone rounded-2xl p-6 text-center cursor-pointer group bg-dark/50" onclick="document.getElementById('file-input').click()">
+                            <input type="file" id="file-input" class="hidden" accept=".mp3,.wav,.mp4" onchange="handleFileUpload(event)">
+                            <div class="w-16 h-16 rounded-full bg-white/5 mx-auto mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i data-lucide="music" class="w-8 h-8 text-primary"></i>
+                            </div>
+                            <p class="text-white font-medium mb-1">Click to Upload</p>
+                            <p class="text-xs text-[#C1F6ED]/50">.mp3, .wav, .mp4 supported</p>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Studio Tools -->
+                    <div class="glass rounded-2xl p-6 border border-white/5">
+                        <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-yellow-400"></i>
+                            AI Studio Tools
+                        </h3>
+                        
+                        <div class="space-y-5">
+                            <!-- DJ Intro -->
+                            <div class="p-4 rounded-xl bg-dark/50 border border-primary/20">
+                                <h4 class="text-sm font-bold text-[#C1F6ED] mb-1 flex items-center">
+                                    <i data-lucide="radio" class="w-4 h-4 mr-2 text-primary"></i> DJ Intro Writer
+                                </h4>
+                                <p class="text-xs text-[#C1F6ED]/60 mb-3">Drafts a live script based on upcoming tracks.</p>
+                                <button id="btn-dj-intro" onclick="generateDJIntro()" class="w-full bg-dark hover:bg-surface text-primary border border-primary/30 font-medium py-2 rounded-lg text-sm transition-all flex items-center justify-center disabled:opacity-50">
+                                    <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> ✨ Write Script
+                                </button>
+                                <div id="dj-script-container" class="mt-3 p-3 bg-black/60 rounded border border-primary/20 text-xs font-mono text-primary hidden-view"></div>
+                            </div>
+
+                            <!-- Commercial Generator -->
+                            <div class="p-4 rounded-xl bg-dark/50 border border-secondary/20">
+                                <h4 class="text-sm font-bold text-[#C1F6ED] mb-1 flex items-center">
+                                    <i data-lucide="mic" class="w-4 h-4 mr-2 text-secondary"></i> Ad Synthesizer
+                                </h4>
+                                <p class="text-xs text-[#C1F6ED]/60 mb-3">AI writes and voices a commercial instantly.</p>
+                                <input id="sponsor-name" type="text" placeholder="Sponsor Name" class="w-full bg-dark border border-secondary/30 rounded-lg px-3 py-2 text-sm text-white mb-2 focus:outline-none focus:border-secondary" oninput="validateAdForm()" />
+                                <input id="sponsor-details" type="text" placeholder="Promo details" class="w-full bg-dark border border-secondary/30 rounded-lg px-3 py-2 text-sm text-white mb-3 focus:outline-none focus:border-secondary" oninput="validateAdForm()" />
+                                <button id="btn-produce-ad" onclick="generateAICommercial()" disabled class="w-full bg-secondary hover:bg-primary text-darker font-bold py-2 rounded-lg text-sm transition-all flex items-center justify-center shadow-lg shadow-secondary/20 disabled:opacity-50">
+                                    <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> ✨ Produce Audio
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                
+                <!-- Right Col: Queue Manager -->
+                <div class="lg:col-span-2">
+                    <div class="glass rounded-2xl border border-white/5 overflow-hidden h-full flex flex-col min-h-[600px]">
+                        <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                            <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                                <i data-lucide="list-music" class="w-5 h-5 text-secondary"></i>
+                                Broadcast Queue
+                            </h3>
+                            <div class="flex items-center gap-3 text-xs bg-dark/50 px-3 py-1.5 rounded-full border border-white/10">
+                                <span class="text-primary font-mono font-bold" id="admin-queue-count">0 Tracks</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="queue-empty-state" class="flex-grow flex flex-col justify-center items-center text-center p-12 hidden-view">
+                            <svg viewBox="0 0 320 160" class="w-32 h-32 opacity-20 mb-6 grayscale" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="65" cy="45" r="24" stroke="white" stroke-width="13" fill="none" />
+                                <polygon points="56,31 74,45 56,59" fill="none" stroke="#f97316" stroke-width="3.5" stroke-linejoin="round" />
+                                <text x="125" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">S</text>
+                                <text x="205" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">A</text>
+                                <line x1="28" y1="92" x2="280" y2="92" stroke="white" stroke-width="3.5" />
+                                <text x="28" y="146" fill="#f97316" font-family="Georgia, 'Times New Roman', serif" font-weight="900" font-size="62" textLength="252" lengthAdjust="spacing">RADIO</text>
+                            </svg>
+                            <p class="text-[#C1F6ED]/80 font-medium text-lg">Your queue is empty.</p>
+                            <p class="text-[#C1F6ED]/50 text-sm mt-1">Upload music or commercials to start broadcasting.</p>
+                        </div>
+
+                        <!-- Queue List -->
+                        <div class="flex-1 overflow-y-auto p-4 space-y-2 max-h-[600px] custom-scrollbar" id="admin-queue">
+                            <!-- Injected via JS -->
+                        </div>
+                        
+                        <div class="p-4 border-t border-white/5 bg-dark/30">
+                            <div class="flex items-center justify-between text-sm text-gray-400 mb-2">
+                                <span>Queue Health</span>
+                                <span class="text-xs text-primary">Active</span>
+                            </div>
+                            <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full w-full bg-gradient-to-r from-primary via-secondary to-accent rounded-full animate-pulse-slow"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <div class="glass-strong rounded-xl px-6 py-4 border border-primary/20 shadow-2xl flex items-center gap-3 shadow-primary/20">
+            <div id="toast-icon" class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 id="toast-title" class="text-white font-medium text-sm">Notification</h4>
+                <p id="toast-message" class="text-[#C1F6ED]/70 text-xs">Action completed</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic Engine -->
+    <script>
+        // --- Core Configuration ---
+        const apiKey = ""; 
+
+        let activeView = 'listener'; 
+        let isAuthenticated = false;
+        let currentArtTrackId = null;
+
+        // The real playlist data array
+        let playlist = [
+            { id: '1', title: 'Late Night Groove', artist: 'OSA Resident DJ', type: 'music', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', artUrl: null, isVideo: false },
+            { id: '2', title: 'OSA Station ID & Sponsor', artist: 'Radio Promo', type: 'commercial', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3', artUrl: null, isVideo: false },
+            { id: '3', title: 'Morning Vibes', artist: 'OSA Artists', type: 'music', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', artUrl: null, isVideo: false }
+        ];
+        
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+        let volume = 0.8;
+        let isMuted = false;
+        let audioEl;
+
+        // --- Initialization ---
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            
+            // Connect to real video tag (acts as audio and video engine)
+            audioEl = document.getElementById('main-player-video');
+            audioEl.volume = volume;
+            
+            // Media Events
+            audioEl.addEventListener('ended', handleTrackEnd);
+            audioEl.addEventListener('play', () => { isPlaying = true; updatePlayerUI(); });
+            audioEl.addEventListener('pause', () => { isPlaying = false; updatePlayerUI(); });
+            
+            // Progress Bar Tracking
+            audioEl.addEventListener('timeupdate', updateProgressBar);
+            
+            // Load state
+            updateQueueUI();
+            loadCurrentTrack();
+            switchView('listener');
+            
+            // Attempt autoplay
+            if(playlist.length > 0) {
+                if(audioEl.hasAttribute('src')) {
+                    audioEl.play().catch(e => console.log("Autoplay blocked by browser."));
+                }
+            }
+        });
+
+        // --- View Toggling ---
+        function switchView(viewName) {
+            if (viewName === 'admin' && !isAuthenticated) {
+                viewName = 'login';
+            }
+            
+            activeView = viewName;
+            
+            const listenerView = document.getElementById('listener-view');
+            const adminView = document.getElementById('admin-view');
+            const loginView = document.getElementById('login-view');
+            
+            const navListener = document.getElementById('nav-listener');
+            const navAdmin = document.getElementById('nav-admin');
+
+            // Reset UI
+            listenerView.classList.add('hidden');
+            adminView.classList.add('hidden');
+            loginView.classList.add('hidden');
+            loginView.classList.remove('flex');
+            
+            if (navListener) navListener.classList.replace('text-white', 'text-primary/60');
+            if (navAdmin) navAdmin.classList.replace('text-white', 'text-primary/60');
+
+            if (viewName === 'listener') {
+                listenerView.classList.remove('hidden');
+                if (navListener) navListener.classList.replace('text-primary/60', 'text-white');
+            } else if (viewName === 'login') {
+                loginView.classList.remove('hidden');
+                loginView.classList.add('flex');
+            } else if (viewName === 'admin') {
+                adminView.classList.remove('hidden');
+                if (navAdmin) navAdmin.classList.replace('text-primary/60', 'text-white');
+            }
+            
+            document.getElementById('mobile-menu').classList.add('hidden');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            
+            if (pass === 'admin') {
+                isAuthenticated = true;
+                errorEl.classList.add('hidden-view');
+                document.getElementById('login-password').value = '';
+                showToast("Access Granted", "Welcome to the Studio");
+                switchView('admin');
+            } else {
+                errorEl.textContent = 'Incorrect password. (Hint: "admin")';
+                errorEl.classList.remove('hidden-view');
+            }
+        }
+
+        // --- Core Media Engine ---
+        function loadCurrentTrack() {
+            const track = playlist[currentTrackIndex];
+            const playBtn = document.getElementById('play-pause-btn');
+            
+            if (track) {
+                if(audioEl.getAttribute('src') !== track.url) {
+                    audioEl.setAttribute('src', track.url);
+                    audioEl.load();
+                }
+                if (playBtn) playBtn.disabled = false;
+            } else {
+                audioEl.pause();
+                audioEl.removeAttribute('src');
+                isPlaying = false;
+                if (playBtn) playBtn.disabled = true;
+            }
+            
+            updatePlayerUI();
+            updateQueueUI();
+        }
+
+        function handleTrackEnd() {
+            if (playlist.length > 0) {
+                currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+                loadCurrentTrack();
+                if (audioEl.hasAttribute('src')) {
+                    audioEl.play().catch(e => console.error(e));
+                }
+            }
+        }
+
+        function togglePlay() {
+            if (!playlist[currentTrackIndex] || !audioEl.hasAttribute('src')) return;
+            if (isPlaying) {
+                audioEl.pause();
+            } else {
+                audioEl.play().catch(e => console.error(e));
+            }
+        }
+
+        function skipTrack(direction) {
+            if (playlist.length <= 1) return;
+            if (direction > 0) {
+                currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            } else {
+                currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+            }
+            loadCurrentTrack();
+            if (audioEl.hasAttribute('src')) {
+                audioEl.play().catch(e => console.error(e));
+            }
+        }
+
+        function handleVolumeChange(e) {
+            volume = parseFloat(e.target.value);
+            if (volume > 0 && isMuted) isMuted = false;
+            applyVolume(true);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            applyVolume(false);
+        }
+
+        function applyVolume(fromSlider = false) {
+            audioEl.volume = isMuted ? 0 : volume;
+            if (!fromSlider) {
+                const slider = document.getElementById('volume-slider');
+                if (slider) slider.value = isMuted ? 0 : volume;
+            }
+            const iconOn = document.getElementById('volume-icon-on');
+            const iconOff = document.getElementById('volume-icon-off');
+            if (iconOn && iconOff) {
+                if (isMuted || volume === 0) {
+                    iconOn.classList.add('hidden-view');
+                    iconOff.classList.remove('hidden-view');
+                } else {
+                    iconOn.classList.remove('hidden-view');
+                    iconOff.classList.add('hidden-view');
+                }
+            }
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgressBar() {
+            const currentEl = document.getElementById('current-time');
+            const totalEl = document.getElementById('total-time');
+            const bar = document.getElementById('progress-bar');
+            
+            if (audioEl.duration) {
+                currentEl.textContent = formatTime(audioEl.currentTime);
+                totalEl.textContent = formatTime(audioEl.duration);
+                const percent = (audioEl.currentTime / audioEl.duration) * 100;
+                bar.style.width = `${percent}%`;
+            }
+        }
+
+        function seekTrack(e) {
+            if(!audioEl.duration) return;
+            const container = document.getElementById('progress-container');
+            const rect = container.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percent = clickX / rect.width;
+            audioEl.currentTime = percent * audioEl.duration;
+        }
+
+        // --- Render UI Updates ---
+        function updatePlayerUI() {
+            const track = playlist[currentTrackIndex];
+            
+            // Text data
+            document.getElementById('current-track-title').textContent = track ? track.title : 'Station Offline';
+            document.getElementById('current-track-artist').textContent = track ? track.artist : 'Upload tracks in Studio';
+            document.getElementById('current-track-type').textContent = track ? (track.type === 'commercial' ? 'Sponsor Spot' : 'Currently Playing') : 'Standby';
+            
+            // Icons & Status
+            const playIcon = document.getElementById('play-icon');
+            const waveVis = document.getElementById('audio-wave-vis');
+            const liveDot = document.getElementById('player-live-dot');
+            const liveText = document.getElementById('player-live-text');
+            
+            if (isPlaying) {
+                if(playIcon) {
+                    playIcon.setAttribute('data-lucide', 'pause');
+                    playIcon.classList.remove('ml-1');
+                }
+                if(waveVis) waveVis.classList.replace('opacity-20', 'opacity-80');
+                if(liveDot) liveDot.className = 'w-2 h-2 rounded-full bg-red-500 live-indicator';
+                if(liveText) {
+                    liveText.textContent = 'Live';
+                    liveText.classList.replace('text-gray-400', 'text-white');
+                }
+            } else {
+                if(playIcon) {
+                    playIcon.setAttribute('data-lucide', 'play');
+                    playIcon.classList.add('ml-1');
+                }
+                if(waveVis) waveVis.classList.replace('opacity-80', 'opacity-20');
+                if(liveDot) liveDot.className = 'w-2 h-2 rounded-full bg-gray-500';
+                if(liveText) {
+                    liveText.textContent = 'Standby';
+                    liveText.classList.replace('text-white', 'text-gray-400');
+                }
+            }
+            lucide.createIcons();
+
+            // Artwork / Video Logic
+            const svgFallback = document.getElementById('album-art-fallback');
+            const imgArt = document.getElementById('album-art-img');
+            
+            if (!track) {
+                svgFallback.classList.remove('hidden-view');
+                imgArt.classList.add('hidden-view');
+                audioEl.classList.add('opacity-0', 'pointer-events-none');
+            } else {
+                if (track.isVideo) {
+                    // Show video element
+                    audioEl.classList.remove('opacity-0', 'pointer-events-none');
+                    svgFallback.classList.add('hidden-view');
+                    imgArt.classList.add('hidden-view');
+                } else {
+                    // Show image/fallback
+                    audioEl.classList.add('opacity-0', 'pointer-events-none');
+                    if (track.artUrl) {
+                        imgArt.src = track.artUrl;
+                        imgArt.classList.remove('hidden-view');
+                        svgFallback.classList.add('hidden-view');
+                    } else {
+                        imgArt.classList.add('hidden-view');
+                        svgFallback.classList.remove('hidden-view');
+                    }
+                }
+            }
+        }
+
+        function updateQueueUI() {
+            const queueList = document.getElementById('admin-queue');
+            const emptyState = document.getElementById('queue-empty-state');
+            const previewList = document.getElementById('preview-queue');
+            
+            const countStr = `${playlist.length} Tracks`;
+            document.getElementById('admin-queue-count').textContent = countStr;
+            document.getElementById('preview-count').textContent = countStr;
+            const statTracks = document.getElementById('stat-tracks');
+            if(statTracks) statTracks.textContent = playlist.length;
+
+            // AI Intro Button state
+            const djBtn = document.getElementById('btn-dj-intro');
+            if(djBtn) {
+                if (playlist.length === 0) {
+                    djBtn.disabled = true;
+                } else if (djBtn.innerHTML.indexOf('Generating') === -1) {
+                    djBtn.disabled = false;
+                }
+            }
+
+            if (playlist.length === 0) {
+                if(emptyState) emptyState.classList.remove('hidden-view');
+                if(queueList) queueList.classList.add('hidden-view');
+                if(previewList) previewList.innerHTML = '<div class="text-sm text-gray-500">Queue is empty</div>';
+                return;
+            }
+
+            if(emptyState) emptyState.classList.add('hidden-view');
+            if(queueList) queueList.classList.remove('hidden-view');
+
+            // Render Admin Queue
+            let adminHtml = '';
+            playlist.forEach((track, index) => {
+                const isCurrentlyPlaying = index === currentTrackIndex;
+                const activeClass = isCurrentlyPlaying ? 'border-primary/40 bg-primary/10' : 'border-white/5 bg-white/5 hover:border-primary/20';
+                
+                const iconBgClass = track.type === 'commercial' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary';
+                const iconName = track.type === 'commercial' ? 'megaphone' : 'music';
+                
+                const artHtml = track.artUrl 
+                    ? `<img src="${track.artUrl}" class="w-12 h-12 rounded-lg object-cover border border-white/10 flex-shrink-0" />`
+                    : `<div class="w-12 h-12 rounded-lg ${iconBgClass} flex items-center justify-center flex-shrink-0"><i data-lucide="${iconName}" class="w-5 h-5"></i></div>`;
+
+                adminHtml += `
+                    <div class="queue-item p-4 rounded-xl transition-all border flex items-center gap-4 ${activeClass}">
+                        ${artHtml}
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-base font-medium ${isCurrentlyPlaying ? 'text-primary' : 'text-white'} truncate">${track.title}</span>
+                                ${isCurrentlyPlaying ? '<span class="px-2 py-0.5 rounded bg-primary text-darker text-[10px] uppercase font-bold tracking-wider">Now Playing</span>' : ''}
+                            </div>
+                            <div class="text-xs text-gray-400 truncate">${track.artist}</div>
+                        </div>
+                        
+                        <div class="flex items-center gap-1">
+                            <button onclick="playSpecificTrack(${index})" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors" title="Play Now">
+                                <i data-lucide="play" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="triggerArtUpload('${track.id}')" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-primary transition-colors" title="Add Cover Art">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="removeTrack('${track.id}')" class="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors" title="Remove">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            if(queueList) queueList.innerHTML = adminHtml;
+
+            // Render Preview Queue (Listener View)
+            if (previewList) {
+                let previewHtml = '';
+                const upcoming = playlist.slice(currentTrackIndex + 1, currentTrackIndex + 4);
+                if (upcoming.length === 0) {
+                    previewHtml = '<div class="text-sm text-gray-500 text-center py-2">No upcoming tracks</div>';
+                } else {
+                    upcoming.forEach((track, i) => {
+                        previewHtml += `
+                            <div class="flex items-center gap-3 text-sm p-2 rounded-lg hover:bg-white/5 transition-colors cursor-default">
+                                <div class="w-8 h-8 rounded bg-dark flex items-center justify-center text-xs font-medium text-primary/70 border border-primary/20">0${i + 1}</div>
+                                <div class="flex-1 truncate text-gray-300">
+                                    <div class="font-medium">${track.title}</div>
+                                    <div class="text-[10px] text-gray-500">${track.artist}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                previewList.innerHTML = previewHtml;
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- Data Mutators ---
+        function playSpecificTrack(index) {
+            currentTrackIndex = index;
+            loadCurrentTrack();
+            if (audioEl.hasAttribute('src')) {
+                audioEl.play().catch(e => console.error(e));
+            }
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Get selected type (music or commercial)
+            const typeRadio = document.querySelector('input[name="upload-type"]:checked');
+            const type = typeRadio ? typeRadio.value : 'music';
+
+            const isVideo = file.type.startsWith('video/') || file.name.toLowerCase().endsWith('.mp4');
+            const objectUrl = URL.createObjectURL(file);
+            
+            const newTrack = {
+                id: Date.now().toString(),
+                title: file.name.replace(/\.[^/.]+$/, ""),
+                artist: type === 'commercial' ? 'Station Sponsor' : 'Local Artist',
+                type: type,
+                url: objectUrl,
+                artUrl: null,
+                isVideo: isVideo
+            };
+
+            playlist.push(newTrack);
+            e.target.value = ''; 
+            
+            if (playlist.length === 1) {
+                currentTrackIndex = 0;
+                loadCurrentTrack();
+            } else {
+                updateQueueUI();
+            }
+            showToast("Upload Complete", `${newTrack.title} added to queue`);
+        }
+
+        function triggerArtUpload(id) {
+            currentArtTrackId = id;
+            document.getElementById('art-uploader').click();
+        }
+
+        function handleArtUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const objectUrl = URL.createObjectURL(file);
+            const track = playlist.find(t => t.id === currentArtTrackId);
+            
+            if (track) {
+                track.artUrl = objectUrl;
+                updateQueueUI();
+                if (playlist[currentTrackIndex] && playlist[currentTrackIndex].id === currentArtTrackId) {
+                    updatePlayerUI();
+                }
+                showToast("Artwork Updated", "Cover art attached to track");
+            }
+            event.target.value = '';
+        }
+
+        function removeTrack(id) {
+            const trackIndex = playlist.findIndex(t => t.id === id);
+            playlist = playlist.filter(t => t.id !== id);
+
+            if (playlist.length === 0) {
+                isPlaying = false;
+                currentTrackIndex = 0;
+                loadCurrentTrack();
+            } else if (trackIndex === currentTrackIndex) {
+                currentTrackIndex = 0; 
+                loadCurrentTrack();
+            } else if (trackIndex < currentTrackIndex) {
+                currentTrackIndex -= 1;
+            }
+            
+            updateQueueUI();
+            updatePlayerUI();
+        }
+
+        function clearQueue() {
+            if(confirm("Are you sure you want to clear the entire queue?")) {
+                playlist = [];
+                isPlaying = false;
+                currentTrackIndex = 0;
+                loadCurrentTrack();
+                showToast("Queue Cleared", "All tracks removed");
+            }
+        }
+
+        // --- Toasts ---
+        function showToast(title, message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-message').textContent = message;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- Sharing ---
+        function shareStream() {
+            const streamUrl = "https://osaradio.com";
+            const tempInput = document.createElement("input");
+            tempInput.value = streamUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand("copy");
+                showToast("Link Copied", "Stream URL copied to clipboard!");
+            } catch (err) {
+                console.error("Failed to copy link", err);
+                showToast("Error", "Could not copy link");
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        // --- AI Studio Tools (Gemini Integration) ---
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function createWavFile(pcmData, sampleRate) {
+            const numChannels = 1;
+            const bitsPerSample = 16;
+            const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+            const blockAlign = numChannels * (bitsPerSample / 8);
+            const dataSize = pcmData.byteLength;
+            const buffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(buffer);
+
+            const writeString = (view, offset, string) => {
+                for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+            };
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            new Uint8Array(buffer, 44).set(new Uint8Array(pcmData));
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        async function generateDJIntro() {
+            if (playlist.length === 0) return;
+            const btn = document.getElementById('btn-dj-intro');
+            const scriptBox = document.getElementById('dj-script-container');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Generating...';
+            lucide.createIcons();
+            scriptBox.classList.add('hidden-view');
+
+            try {
+                const upcomingTracks = playlist.slice(currentTrackIndex, currentTrackIndex + 3).map(t => `${t.title} by ${t.artist}`).join(', ');
+                const prompt = `You are a hype radio DJ for "OSA Radio". Write a short, energetic 2-sentence intro to read on air right now. Mention you are about to play these upcoming tracks: ${upcomingTracks}. Keep it punchy, cool, and conversational.`;
+                
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                
+                const data = await response.json();
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    scriptBox.textContent = `"${data.candidates[0].content.parts[0].text}"`;
+                    scriptBox.classList.remove('hidden-view');
+                }
+            } catch (error) {
+                console.error(error);
+                scriptBox.textContent = "AI Writer unavailable.";
+                scriptBox.classList.remove('hidden-view');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> ✨ Write Script';
+                lucide.createIcons();
+            }
+        }
+
+        function validateAdForm() {
+            const name = document.getElementById('sponsor-name').value;
+            const details = document.getElementById('sponsor-details').value;
+            const btn = document.getElementById('btn-produce-ad');
+            if(name.trim() !== '' && details.trim() !== '') {
+                if(btn.innerHTML.indexOf('Producing') === -1) btn.disabled = false;
+            } else {
+                btn.disabled = true;
+            }
+        }
+
+        async function generateAICommercial() {
+            const nameInput = document.getElementById('sponsor-name');
+            const detailsInput = document.getElementById('sponsor-details');
+            const btn = document.getElementById('btn-produce-ad');
+            
+            const sponsorName = nameInput.value;
+            const sponsorDetails = detailsInput.value;
+            if (!sponsorName || !sponsorDetails) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Producing Audio...';
+            lucide.createIcons();
+
+            try {
+                // 1. Generate Script
+                const prompt = `Write a short 15-second radio commercial script for a sponsor named "${sponsorName}". Details: ${sponsorDetails}. ONLY output the spoken text, no sound effects, no stage directions, and no character names at the beginning. Just the raw dialogue.`;
+                const textRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                
+                const textData = await textRes.json();
+                const scriptText = textData.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!scriptText) throw new Error("Script generation failed");
+
+                // 2. Generate Audio
+                const ttsPayload = {
+                    contents: [{ parts: [{ text: `Say enthusiastically and clearly: ${scriptText}` }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } }
+                    },
+                    model: "gemini-2.5-flash-preview-tts"
+                };
+
+                const ttsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ttsPayload)
+                });
+
+                const ttsData = await ttsRes.json();
+                const inlineData = ttsData.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+                if (!inlineData || !inlineData.data) throw new Error("Audio generation failed");
+
+                // 3. Convert to WAV
+                const mimeType = inlineData.mimeType || "audio/L16;rate=24000";
+                const rateMatch = mimeType.match(/rate=(\d+)/);
+                const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+                
+                const pcmBuffer = base64ToArrayBuffer(inlineData.data);
+                const wavBlob = createWavFile(pcmBuffer, sampleRate);
+                const objectUrl = URL.createObjectURL(wavBlob);
+
+                // 4. Add to playlist
+                const newTrack = {
+                    id: Date.now().toString(),
+                    title: `${sponsorName} AI Promo`,
+                    artist: 'AI Sponsor Generator',
+                    type: 'commercial',
+                    url: objectUrl,
+                    artUrl: null,
+                    isVideo: false
+                };
+                
+                playlist.push(newTrack);
+                nameInput.value = '';
+                detailsInput.value = '';
+                
+                if (playlist.length === 1) {
+                    currentTrackIndex = 0;
+                    loadCurrentTrack();
+                } else {
+                    updateQueueUI();
+                }
+                
+                showToast("AI Render Complete", "Commercial added to queue!");
+
+            } catch (error) {
+                console.error(error);
+                alert("Failed to generate AI commercial.");
+            } finally {
+                btn.disabled = true; 
+                btn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> ✨ Produce Audio';
+                lucide.createIcons();
+            }
+        }
+    </script>
+</body>
+</html>                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                        },
+                        'wave': {
+                            '0%, 100%': { height: '10%' },
+                            '50%': { height: '100%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #02353C;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(46, 175, 125, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(63, 208, 201, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(249, 115, 22, 0.1) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+        
+        .glass {
+            background: rgba(3, 74, 84, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(63, 208, 201, 0.15);
+        }
+        
+        .glass-strong {
+            background: rgba(1, 28, 32, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(63, 208, 201, 0.2);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3FD0C9 0%, #2EAF7D 50%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 30px;
+        }
+        
+        .audio-wave span {
+            width: 4px;
+            background: linear-gradient(to top, #3FD0C9, #2EAF7D);
+            border-radius: 2px;
+            animation: wave 1.2s ease-in-out infinite;
+        }
+        
+        .audio-wave span:nth-child(1) { animation-delay: 0s; height: 20%; }
+        .audio-wave span:nth-child(2) { animation-delay: 0.1s; height: 40%; }
+        .audio-wave span:nth-child(3) { animation-delay: 0.2s; height: 60%; }
+        .audio-wave span:nth-child(4) { animation-delay: 0.3s; height: 40%; }
+        .audio-wave span:nth-child(5) { animation-delay: 0.4s; height: 20%; }
+        
+        .now-playing-glow {
+            box-shadow: 0 0 60px rgba(63, 208, 201, 0.15), inset 0 0 60px rgba(46, 175, 125, 0.05);
+        }
+        
+        .queue-item {
+            transition: all 0.3s ease;
+        }
+        
+        .queue-item:hover {
+            transform: translateX(5px);
+            background: rgba(63, 208, 201, 0.1);
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .upload-zone {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%233FD0C9FF' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone:hover {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%232EAF7DFF' stroke-width='3' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            transform: scale(1.02);
+        }
+        
+        .live-indicator {
+            position: relative;
+        }
+        
+        .live-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        
+        @keyframes ping {
+            75%, 100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .track-progress {
+            background: linear-gradient(90deg, #3FD0C9 0%, #2EAF7D 100%);
+        }
+
+        .hidden-view { display: none !important; }
+    </style>
+</head>
+<body class="text-gray-100 antialiased overflow-x-hidden">
+
+    <!-- Global hidden inputs -->
+    <input type="file" id="art-uploader" accept="image/*" class="hidden-view" onchange="handleArtUpload(event)" />
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-strong border-b border-primary/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity" onclick="switchView('listener')">
+                    <svg viewBox="0 0 320 160" class="h-12 w-auto" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="65" cy="45" r="24" stroke="white" stroke-width="13" fill="none" />
+                        <polygon points="56,31 74,45 56,59" fill="none" stroke="#f97316" stroke-width="3.5" stroke-linejoin="round" />
+                        <text x="125" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">S</text>
+                        <text x="205" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">A</text>
+                        <line x1="28" y1="92" x2="280" y2="92" stroke="white" stroke-width="3.5" />
+                        <text x="28" y="146" fill="#f97316" font-family="Georgia, 'Times New Roman', serif" font-weight="900" font-size="62" textLength="252" lengthAdjust="spacing">RADIO</text>
+                    </svg>
+                    <span class="ml-2 px-2 py-0.5 rounded-full bg-accent/20 text-accent text-xs font-bold border border-accent/30 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-accent live-indicator"></span>
+                        LIVE
+                    </span>
+                </div>
+                
+                <div class="hidden md:flex items-center gap-8">
+                    <button onclick="switchView('listener')" id="nav-listener" class="text-sm font-medium text-white hover:text-primary transition-colors flex items-center gap-2">
+                        <i data-lucide="headphones" class="w-4 h-4"></i>
+                        Listener View
+                    </button>
+                    <button onclick="switchView('admin')" id="nav-admin" class="text-sm font-medium text-primary/60 hover:text-primary transition-colors flex items-center gap-2">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        Admin Studio
+                    </button>
+                    <div class="h-6 w-px bg-white/10"></div>
+                    <button onclick="switchView('admin')" class="px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-sm font-medium text-primary transition-all flex items-center gap-2">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                        Studio Login
+                    </button>
+                </div>
+                
+                <button class="md:hidden p-2 rounded-lg hover:bg-white/5" onclick="toggleMobileMenu()">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden glass border-t border-white/5 mt-20 fixed w-full z-40">
+            <div class="px-4 pt-2 pb-4 space-y-1">
+                <button onclick="switchView('listener')" class="w-full text-left px-3 py-3 rounded-lg hover:bg-white/5 text-white/90 flex items-center gap-3">
+                    <i data-lucide="headphones" class="w-5 h-5 text-primary"></i>
+                    Listener View
+                </button>
+                <button onclick="switchView('admin')" class="w-full text-left px-3 py-3 rounded-lg hover:bg-white/5 text-white/90 flex items-center gap-3">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 text-secondary"></i>
+                    Admin Studio
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen">
+        
+        <!-- ================= LISTENER VIEW ================= -->
+        <div id="listener-view" class="space-y-8 animate-fade-in">
+            
+            <!-- Hero / Now Playing -->
+            <section class="grid lg:grid-cols-12 gap-6 items-center">
+                <!-- Current Track Info -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="space-y-2">
+                        <h2 class="text-sm uppercase tracking-widest text-primary font-semibold">Now Broadcasting</h2>
+                        <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight">
+                            <span class="block text-white/90">Midnight</span>
+                            <span class="gradient-text">Frequency</span>
+                        </h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 text-sm text-[#C1F6ED]">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            Started 2h ago
+                        </span>
+                        <span class="w-1 h-1 rounded-full bg-gray-600"></span>
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4"></i>
+                            <span id="listener-count">1,247</span> listeners
+                        </span>
+                        <span class="w-1 h-1 rounded-full bg-gray-600"></span>
+                        <span class="px-2 py-1 rounded bg-primary/10 text-primary text-xs font-medium border border-primary/20">Live Stream</span>
+                    </div>
+                    
+                    <p class="text-[#C1F6ED]/70 leading-relaxed max-w-md">
+                        Experience OSA Radio's premium sound with zero interruptions. Smooth transitions between curated music and sponsor messages.
+                    </p>
+                    
+                    <!-- Mini Queue Preview -->
+                    <div class="glass rounded-2xl p-4 space-y-3 border border-white/5">
+                        <div class="flex items-center justify-between text-xs text-primary uppercase tracking-wider">
+                            <span>Up Next in Queue</span>
+                            <span id="preview-count">0 items</span>
+                        </div>
+                        <div class="space-y-2" id="preview-queue">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Player Interface -->
+                <div class="lg:col-span-7">
+                    <div class="relative">
+                        <!-- Background Glow -->
+                        <div class="absolute -inset-4 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-full blur-3xl opacity-50 animate-pulse-slow"></div>
+                        
+                        <!-- Main Player Card -->
                         <div class="relative glass-strong rounded-3xl p-8 border border-white/10 now-playing-glow">
                             <div class="flex flex-col sm:flex-row gap-8 items-center">
                                 
