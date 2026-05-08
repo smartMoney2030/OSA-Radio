@@ -88,6 +88,1312 @@
             width: 4px;
             background: linear-gradient(to top, #3FD0C9, #2EAF7D);
             border-radius: 2px;
+            height: 10%; /* Default height */
+            transition: height 0.05s ease; /* Smooth out fast JS updates */
+        }
+        
+        .now-playing-glow {
+            box-shadow: 0 0 60px rgba(63, 208, 201, 0.2), inset 0 0 60px rgba(46, 175, 125, 0.1);
+        }
+        
+        .queue-item {
+            transition: all 0.3s ease;
+        }
+        
+        .queue-item:hover {
+            transform: translateX(5px);
+            background: rgba(63, 208, 201, 0.1);
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .upload-zone {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%233FD0C9FF' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone:hover {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%232EAF7DFF' stroke-width='3' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            transform: scale(1.02);
+        }
+        
+        .control-knob {
+            background: conic-gradient(from 0deg, #3FD0C9, #2EAF7D, #f97316, #3FD0C9);
+        }
+        
+        .live-indicator {
+            position: relative;
+        }
+        
+        .live-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        
+        @keyframes ping {
+            75%, 100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .switch-toggle {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .track-progress {
+            background: linear-gradient(90deg, #3FD0C9 0%, #2EAF7D 100%);
+        }
+        
+        .hidden-view { display: none !important; }
+    </style>
+</head>
+<body class="text-gray-100 antialiased overflow-x-hidden">
+
+    <!-- Global hidden input for Cover Art -->
+    <input type="file" id="art-uploader" accept="image/*" class="hidden-view" onchange="handleArtUpload(event)" />
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-strong border-b border-primary/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('listener')">
+                    <!-- Custom SVG Logo -->
+                    <svg viewBox="0 0 320 160" class="h-12 w-auto" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="65" cy="45" r="24" stroke="white" stroke-width="13" fill="none" />
+                        <polygon points="56,31 74,45 56,59" fill="none" stroke="#f97316" stroke-width="3.5" stroke-linejoin="round" />
+                        <text x="125" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">S</text>
+                        <text x="205" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">A</text>
+                        <line x1="28" y1="92" x2="280" y2="92" stroke="white" stroke-width="3.5" />
+                        <text x="28" y="146" fill="#f97316" font-family="Georgia, 'Times New Roman', serif" font-weight="900" font-size="62" textLength="252" lengthAdjust="spacing">RADIO</text>
+                    </svg>
+                    <span class="ml-2 px-2 py-0.5 rounded-full bg-accent/20 text-accent text-xs font-bold border border-accent/30 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-accent live-indicator"></span>
+                        LIVE
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen">
+        
+        <!-- ================= LISTENER VIEW ================= -->
+        <div id="listener-view" class="space-y-8 animate-fade-in">
+            
+            <!-- Hero / Now Playing -->
+            <section class="grid lg:grid-cols-12 gap-6 items-center">
+                <!-- Current Track Info -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="space-y-2">
+                        <h2 class="text-sm uppercase tracking-widest text-primary font-semibold">Now Broadcasting</h2>
+                        <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight">
+                            <span class="block text-white/90">Midnight</span>
+                            <span class="gradient-text">Frequency</span>
+                        </h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 text-sm text-[#C1F6ED]">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            Started 2h ago
+                        </span>
+                        <span class="w-1 h-1 rounded-full bg-gray-600"></span>
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4"></i>
+                            <span id="listener-count">1,247</span> listeners
+                        </span>
+                        <span class="w-1 h-1 rounded-full bg-gray-600"></span>
+                        <span class="px-2 py-1 rounded bg-primary/10 text-primary text-xs font-medium border border-primary/20">Electronic / Indie</span>
+                    </div>
+                    
+                    <p class="text-[#C1F6ED]/70 leading-relaxed max-w-md">
+                        Experience OSA Radio's premium sound with zero interruptions. Smooth transitions between curated music and sponsor messages.
+                    </p>
+                    
+                    <!-- Mini Queue Preview -->
+                    <div class="glass rounded-2xl p-4 space-y-3 border border-white/5">
+                        <div class="flex items-center justify-between text-xs text-[#C1F6ED]/70 uppercase tracking-wider">
+                            <span>Up Next in Queue</span>
+                            <span id="preview-count">0 items</span>
+                        </div>
+                        <div class="space-y-2" id="preview-queue">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Player Interface -->
+                <div class="lg:col-span-7">
+                    <div class="relative">
+                        <!-- Background Glow -->
+                        <div class="absolute -inset-4 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-full blur-3xl opacity-50 animate-pulse-slow"></div>
+                        
+                        <!-- Main Player Card -->
+                        <div class="relative glass-strong rounded-3xl p-6 sm:p-8 border border-white/10 now-playing-glow w-full overflow-hidden">
+                            <div class="flex flex-col md:flex-row lg:flex-col xl:flex-row gap-6 sm:gap-8 items-center">
+                                
+                                <!-- Album Art (Scalable) -->
+                                <div class="relative w-full max-w-[240px] sm:max-w-[280px] aspect-square flex-shrink-0 group mx-auto">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent rounded-2xl rotate-6 opacity-50 group-hover:rotate-12 transition-transform duration-500"></div>
+                                    <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent rounded-2xl -rotate-3 opacity-30 group-hover:-rotate-6 transition-transform duration-500"></div>
+                                    
+                                    <div class="relative w-full h-full bg-darker rounded-2xl shadow-2xl overflow-hidden border border-white/10 flex items-center justify-center">
+                                        <!-- Placeholder logo if no art -->
+                                        <svg id="album-art-fallback" viewBox="0 0 320 160" class="w-3/4 h-auto opacity-30" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="65" cy="45" r="24" stroke="white" stroke-width="13" fill="none" />
+                                            <polygon points="56,31 74,45 56,59" fill="none" stroke="#f97316" stroke-width="3.5" stroke-linejoin="round" />
+                                            <text x="125" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">S</text>
+                                            <text x="205" y="69" fill="white" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="76">A</text>
+                                            <line x1="28" y1="92" x2="280" y2="92" stroke="white" stroke-width="3.5" />
+                                            <text x="28" y="146" fill="#f97316" font-family="Georgia, 'Times New Roman', serif" font-weight="900" font-size="62" textLength="252" lengthAdjust="spacing">RADIO</text>
+                                        </svg>
+                                        <!-- Dynamic Cover Art Image -->
+                                        <img id="album-art-img" src="" alt="Album Art" class="absolute inset-0 w-full h-full object-cover hidden-view z-0">
+                                    </div>
+                                    
+                                    <!-- Live Badge -->
+                                    <div class="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-2">
+                                        <span id="player-live-dot" class="w-2 h-2 rounded-full bg-gray-500"></span>
+                                        <span id="player-live-text" class="text-xs font-bold uppercase tracking-wider text-gray-400">Standby</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Controls -->
+                                <div class="flex-1 w-full min-w-0 space-y-6 sm:space-y-8">
+                                    <div class="truncate">
+                                        <div class="text-primary text-sm font-semibold mb-1 truncate" id="current-track-type">Station Offline</div>
+                                        <h3 class="text-3xl font-display font-bold text-white mb-2 truncate" id="current-track-title">Awaiting Tracks</h3>
+                                        <p class="text-[#C1F6ED]/70 text-lg truncate" id="current-track-artist">Add tracks in Studio</p>
+                                    </div>
+                                    
+                                    <!-- Audio Wave Visualization -->
+                                    <div class="h-16 flex items-center justify-center gap-1 opacity-20 transition-opacity duration-300" id="audio-wave-vis">
+                                        <div class="audio-wave">
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Progress Bar -->
+                                    <div class="space-y-2">
+                                        <div class="relative h-2 bg-dark rounded-full overflow-hidden cursor-pointer group" onclick="seekTrack(event)" id="progress-container">
+                                            <div id="progress-bar" class="absolute inset-y-0 left-0 w-0 track-progress rounded-full group-hover:from-primary transition-all duration-100 ease-linear"></div>
+                                            <div id="progress-knob" class="absolute inset-y-0 w-4 h-4 bg-white rounded-full -translate-y-1/2 top-1/2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style="left: 0%;"></div>
+                                        </div>
+                                        <div class="flex justify-between text-xs text-[#C1F6ED]/70 font-medium">
+                                            <span id="current-time">0:00</span>
+                                            <span id="total-time">0:00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Main Controls -->
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-4 flex-shrink-0">
+                                            <button class="p-3 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition-colors" onclick="skipTrack(-1)">
+                                                <i data-lucide="skip-back" class="w-6 h-6"></i>
+                                            </button>
+                                            
+                                            <button id="play-pause-btn" disabled class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all text-darker disabled:opacity-50 disabled:hover:scale-100" onclick="togglePlay()">
+                                                <i data-lucide="play" class="w-6 h-6 sm:w-7 sm:h-7 fill-current ml-1" id="play-icon"></i>
+                                            </button>
+                                            
+                                            <button class="p-3 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition-colors" onclick="skipTrack(1)">
+                                                <i data-lucide="skip-forward" class="w-6 h-6"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-2 sm:gap-3 w-24 sm:w-32">
+                                            <button onclick="toggleMute()" class="text-[#C1F6ED]/70 hover:text-white transition-colors flex-shrink-0">
+                                                <i id="volume-icon-on" data-lucide="volume-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                                                <i id="volume-icon-off" data-lucide="volume-x" class="w-4 h-4 sm:w-5 sm:h-5 hidden-view"></i>
+                                            </button>
+                                            <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" oninput="handleVolumeChange(event)" class="w-full h-1.5 bg-dark border border-primary/20 rounded-lg appearance-none cursor-pointer" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Control Center -->
+            <section class="grid md:grid-cols-3 gap-6">
+                <!-- Stream Info & Options -->
+                <div class="glass rounded-2xl p-6 border border-white/5 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                            <i data-lucide="settings-2" class="w-5 h-5 text-primary"></i>
+                            Stream Details
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-primary/10">
+                                <span class="text-sm text-[#C1F6ED]/70">Stream URL</span>
+                                <span class="text-sm font-mono text-primary">osaradio.com</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-primary/10">
+                                <span class="text-sm text-[#C1F6ED]/70">Bitrate</span>
+                                <span class="text-sm font-mono text-white">320 kbps</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-primary/10">
+                                <span class="text-sm text-[#C1F6ED]/70">Buffer</span>
+                                <span class="text-sm font-mono text-secondary">Healthy</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="shareStream()" class="w-full py-3 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary text-sm font-medium transition-all flex items-center justify-center gap-2 mt-4">
+                        <i data-lucide="share-2" class="w-4 h-4"></i>
+                        Share Stream
+                    </button>
+                </div>
+                
+                <!-- Schedule Preview -->
+                <div class="glass rounded-2xl p-6 border border-white/5">
+                    <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-secondary"></i>
+                        Tonight's Schedule
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 rounded-xl bg-white/5 border-l-2 border-primary">
+                            <div class="text-xs text-primary font-semibold mb-1">22:00 - 00:00</div>
+                            <div class="text-sm font-medium text-white">Night Vibes</div>
+                            <div class="text-xs text-gray-400">Host: DJ Astral</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/5 border-l-2 border-secondary opacity-80">
+                            <div class="text-xs text-secondary font-semibold mb-1">00:00 - 02:00</div>
+                            <div class="text-sm font-medium text-white">Midnight Jazz</div>
+                            <div class="text-xs text-gray-400">Host: Sarah Smooth</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/5 border-l-2 border-accent opacity-60">
+                            <div class="text-xs text-accent font-semibold mb-1">02:00 - 04:00</div>
+                            <div class="text-sm font-medium text-white">After Hours</div>
+                            <div class="text-xs text-gray-400">Host: The Night Owl</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="glass rounded-2xl p-6 border border-white/5">
+                    <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-5 h-5 text-accent"></i>
+                        Stats
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4 h-[calc(100%-2rem)]">
+                        <div class="p-4 rounded-2xl bg-white/5 border border-primary/10 flex flex-col items-center justify-center text-center">
+                            <div class="text-2xl font-bold text-white mb-1">48h</div>
+                            <div class="text-xs text-[#C1F6ED]/70">Broadcast</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-white/5 border border-primary/10 flex flex-col items-center justify-center text-center">
+                            <div class="text-2xl font-bold text-primary mb-1">99.9%</div>
+                            <div class="text-xs text-[#C1F6ED]/70">Uptime</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-white/5 border border-primary/10 flex flex-col items-center justify-center text-center">
+                            <div class="text-2xl font-bold text-secondary mb-1" id="stat-tracks">0</div>
+                            <div class="text-xs text-[#C1F6ED]/70">Queue Size</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-white/5 border border-primary/10 flex flex-col items-center justify-center text-center">
+                            <div class="text-2xl font-bold text-accent mb-1">Auto</div>
+                            <div class="text-xs text-[#C1F6ED]/70">Playback Engine</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Recent Activity -->
+            <section class="glass rounded-2xl p-6 border border-white/5">
+                <h3 class="font-display font-bold text-xl mb-6 flex items-center gap-2">
+                    <i data-lucide="history" class="w-5 h-5 text-primary"></i>
+                    Recent Broadcast Log
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="text-xs text-[#C1F6ED]/60 uppercase border-b border-white/10">
+                            <tr>
+                                <th class="pb-3 font-medium px-2">Time</th>
+                                <th class="pb-3 font-medium">Event</th>
+                                <th class="pb-3 font-medium">Type</th>
+                                <th class="pb-3 font-medium">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5" id="activity-log">
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="py-4 px-2 text-[#C1F6ED]/70">Just now</td>
+                                <td class="py-4 text-white font-medium">System Initialization</td>
+                                <td class="py-4"><span class="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs border border-primary/20">System</span></td>
+                                <td class="py-4"><span class="flex items-center gap-1.5 text-secondary text-xs"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Complete</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= LOGIN VIEW ================= -->
+        <div id="login-view" class="hidden flex-col items-center justify-center py-20 animate-fade-in">
+            <div class="glass-strong border border-primary/20 p-8 rounded-2xl shadow-xl w-full max-w-sm mx-auto mt-10">
+                <div class="flex justify-center mb-6">
+                    <div class="p-4 bg-dark rounded-full border border-primary/30 text-primary shadow-[0_0_15px_rgba(63,208,201,0.2)]">
+                        <i data-lucide="lock" class="w-8 h-8"></i>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-display font-bold text-center text-white mb-2">Studio Admin</h2>
+                <p class="text-[#C1F6ED]/70 text-center text-sm mb-6">Please log in to access the studio.</p>
+                
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <input id="login-password" type="password" placeholder="Enter password" class="w-full bg-dark border border-primary/30 rounded-xl px-4 py-3 text-white placeholder-[#C1F6ED]/40 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                    </div>
+                    <p id="login-error" class="text-accent text-sm text-center hidden-view"></p>
+                    <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-darker font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-transform hover:scale-[1.02] shadow-lg shadow-primary/20">
+                        <i data-lucide="log-in" class="w-5 h-5"></i> <span>Login</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= ADMIN STUDIO VIEW ================= -->
+        <div id="admin-view" class="hidden space-y-8 animate-fade-in">
+            
+            <!-- Admin Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 glass rounded-2xl p-6 border border-white/5">
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white mb-1">Studio Control Center</h2>
+                    <p class="text-[#C1F6ED]/70">Manage broadcasts, uploads, and queue</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="clearQueue()" class="px-4 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all text-sm font-medium">
+                        <i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i>
+                        Clear Queue
+                    </button>
+                    <button onclick="saveQueue()" class="px-6 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-darker font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all text-sm flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save Queue
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Main Control Grid -->
+            <div class="grid lg:grid-cols-3 gap-6">
+                
+                <!-- Upload Section & Category Filter -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass rounded-2xl p-6 border border-white/5">
+                        <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                            <i data-lucide="upload-cloud" class="w-5 h-5 text-primary"></i>
+                            Upload Content
+                        </h3>
+                        
+                        <div id="upload-zone" class="upload-zone rounded-2xl p-8 text-center cursor-pointer group bg-dark/50" onclick="document.getElementById('file-input').click()">
+                            <input type="file" id="file-input" class="hidden" accept=".mp3,.wav" onchange="handleFileSelect(event)">
+                            <div class="w-16 h-16 rounded-full bg-white/5 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i data-lucide="music" class="w-8 h-8 text-primary"></i>
+                            </div>
+                            <p class="text-white font-medium mb-1">Drop audio files here</p>
+                            <p class="text-sm text-[#C1F6ED]/50">or click to browse (.mp3, .wav)</p>
+                        </div>
+                        
+                        <div class="mt-4 p-4 rounded-xl bg-dark/50 border border-primary/20">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                                    <i data-lucide="mic" class="w-5 h-5 text-primary"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-white">Record Live Input</div>
+                                    <div class="text-xs text-[#C1F6ED]/50">Capture broadcast now</div>
+                                </div>
+                                <button onclick="showToast('Recording Unvailable', 'Microphone permissions required.')" class="w-10 h-10 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-colors">
+                                    <i data-lucide="circle" class="w-4 h-4 fill-current"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Category Filter -->
+                    <div class="glass rounded-2xl p-6 border border-white/5">
+                        <h3 class="font-display font-bold text-lg mb-4">Content Type Target</h3>
+                        <p class="text-xs text-[#C1F6ED]/50 mb-4">Select the default tag applied to newly uploaded files.</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 p-3 rounded-xl bg-dark/50 cursor-pointer hover:bg-white/10 transition-colors border border-primary/10">
+                                <input type="radio" name="upload-type" value="music" checked class="w-4 h-4 text-primary bg-dark border-primary/50 focus:ring-primary">
+                                <span class="flex-1 text-sm text-white">Music Track</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-xl bg-dark/50 cursor-pointer hover:bg-white/10 transition-colors border border-accent/10">
+                                <input type="radio" name="upload-type" value="commercial" class="w-4 h-4 text-accent bg-dark border-accent/50 focus:ring-accent">
+                                <span class="flex-1 text-sm text-white">Sponsor / Commercial</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-xl bg-dark/50 cursor-pointer hover:bg-white/10 transition-colors border border-secondary/10">
+                                <input type="radio" name="upload-type" value="talk" class="w-4 h-4 text-secondary bg-dark border-secondary/50 focus:ring-secondary">
+                                <span class="flex-1 text-sm text-white">Talk / Station ID</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Queue Manager -->
+                <div class="lg:col-span-2">
+                    <div class="glass rounded-2xl border border-white/5 overflow-hidden h-full flex flex-col">
+                        <div class="p-6 border-b border-white/5 flex items-center justify-between bg-dark/30">
+                            <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                                <i data-lucide="list-music" class="w-5 h-5 text-secondary"></i>
+                                Broadcast Queue
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-[#C1F6ED]/70">Auto-play</span>
+                                <button id="autoplay-toggle" onclick="toggleAutoplay()" class="switch-toggle w-12 h-6 rounded-full bg-primary/20 border border-primary/30 relative transition-colors">
+                                    <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary transition-transform translate-x-6" id="autoplay-knob"></div>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 overflow-y-auto p-4 space-y-2 max-h-[600px] scrollbar-hide bg-darker/50" id="admin-queue">
+                            <!-- Queue items will be populated here -->
+                        </div>
+                        
+                        <div class="p-4 border-t border-white/5 bg-dark/80">
+                            <div class="flex items-center justify-between text-sm text-[#C1F6ED]/70 mb-3">
+                                <span>Engine Status: <span class="text-primary font-medium">Ready</span></span>
+                                <span class="text-xs bg-white/5 px-2 py-1 rounded border border-white/10 font-mono" id="admin-queue-count">0 items</span>
+                            </div>
+                            <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full w-full bg-gradient-to-r from-primary via-secondary to-accent rounded-full animate-pulse-slow"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sponsor Spot Manager -->
+            <div class="glass rounded-2xl p-6 border border-white/5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                        <i data-lucide="megaphone" class="w-5 h-5 text-accent"></i>
+                        Scheduled Commercials
+                    </h3>
+                    <button onclick="addCommercial()" class="px-4 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-all text-sm font-medium flex items-center justify-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        Generate Test Spot
+                    </button>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4" id="commercial-grid">
+                    <div class="p-4 rounded-xl bg-dark/50 border border-white/5 hover:border-accent/30 transition-colors group">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                            </div>
+                            <span class="px-2 py-1 rounded-full bg-accent/10 text-accent text-xs border border-accent/20">Sponsor</span>
+                        </div>
+                        <h4 class="text-white font-medium mb-1">TechStore Promo</h4>
+                        <p class="text-xs text-[#C1F6ED]/50 mb-3">0:30 • 2:00 PM</p>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-[#C1F6ED]/40">Played: 2/3</span>
+                            <button class="text-accent hover:text-accent/80">Edit</button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 rounded-xl bg-dark/50 border border-white/5 hover:border-accent/30 transition-colors group">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                                <i data-lucide="coffee" class="w-5 h-5"></i>
+                            </div>
+                            <span class="px-2 py-1 rounded-full bg-accent/10 text-accent text-xs border border-accent/20">Sponsor</span>
+                        </div>
+                        <h4 class="text-white font-medium mb-1">Bean There Cafe</h4>
+                        <p class="text-xs text-[#C1F6ED]/50 mb-3">0:15 • 3:30 PM</p>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-[#C1F6ED]/40">Scheduled</span>
+                            <button class="text-accent hover:text-accent/80">Edit</button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 rounded-xl border-dashed border-2 border-white/10 bg-transparent flex flex-col items-center justify-center text-[#C1F6ED]/40 cursor-pointer hover:border-accent/30 hover:text-accent transition-colors" onclick="addCommercial()">
+                        <i data-lucide="plus-circle" class="w-8 h-8 mb-2"></i>
+                        <span class="text-sm font-medium">Add Manual Spot</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stream Settings -->
+            <div class="glass rounded-2xl p-8 border border-white/5">
+                <h3 class="font-display font-bold text-xl mb-6 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-5 h-5 text-primary"></i>
+                    Stream Configuration
+                </h3>
+                <div class="grid md:grid-cols-4 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm text-[#C1F6ED]/70">Stream Endpoint</label>
+                        <input type="text" value="live.osaradio.com:8080/stream" readonly class="w-full px-4 py-3 rounded-xl bg-dark/50 border border-white/10 text-gray-400 text-sm font-mono focus:outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm text-[#C1F6ED]/70">Station Name</label>
+                        <input type="text" value="OSA Radio - Live" class="w-full px-4 py-3 rounded-xl bg-dark/50 border border-primary/20 text-white text-sm focus:border-primary focus:outline-none transition-colors">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm text-[#C1F6ED]/70">Category</label>
+                        <select class="w-full px-4 py-3 rounded-xl bg-dark/50 border border-primary/20 text-white text-sm focus:border-primary focus:outline-none transition-colors">
+                            <option>Electronic</option>
+                            <option>Indie</option>
+                            <option>Jazz</option>
+                            <option>Talk Show</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm text-[#C1F6ED]/70">Bitrate Limit</label>
+                        <select class="w-full px-4 py-3 rounded-xl bg-dark/50 border border-primary/20 text-white text-sm focus:border-primary focus:outline-none transition-colors">
+                            <option>320 kbps (High)</option>
+                            <option>192 kbps (Standard)</option>
+                            <option>128 kbps (Economy)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 pb-4 border-t border-white/10 text-center">
+            <p class="text-[#C1F6ED]/50 text-sm">
+                &copy; 2026 OSA Radio. All rights reserved. | 
+                <button onclick="switchView('admin')" class="hover:text-primary transition-colors ml-1">Admin Login</button>
+            </p>
+        </footer>
+    </main>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <div class="glass-strong rounded-xl px-6 py-4 border border-primary/20 shadow-2xl flex items-center gap-3 shadow-primary/20">
+            <div id="toast-icon" class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 id="toast-title" class="text-white font-medium text-sm">Notification</h4>
+                <p id="toast-message" class="text-[#C1F6ED]/70 text-xs">Action completed</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic Engine -->
+    <script>
+        // --- State Management ---
+        let isAuthenticated = false;
+        let isPlaying = false;
+        let isMuted = false;
+        let volume = 0.8;
+        let autoplayEnabled = true;
+        let currentView = 'listener';
+        let currentTrackIndex = 0;
+        let currentArtTrackIndex = null;
+        
+        // Initial Dummy/Real Tracks mix 
+        let queue = [
+            { id: 1, title: "Late Night Groove", artist: "OSA Resident DJ", type: "music", status: "upcoming", url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', artUrl: null },
+            { id: 2, title: "Midnight Jazz", artist: "Smooth Trio", type: "music", status: "upcoming", url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', artUrl: null },
+            { id: 3, title: "TechStore Commercial", artist: "Sponsor", type: "commercial", status: "upcoming", url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3', artUrl: null }
+        ];
+        
+        // --- DUAL Audio Engine (Fixes CORS muting constraints) ---
+        // We use TWO audio elements: one that connects to the visualizer for local files, 
+        // and one that bypasses the visualizer for cross-origin remote files to avoid getting muted.
+        const localAudioEl = new Audio();
+        const remoteAudioEl = new Audio();
+        let audioEl = remoteAudioEl; // Pointer to active player
+        
+        [localAudioEl, remoteAudioEl].forEach(el => {
+            el.volume = volume;
+            el.addEventListener('ended', handleTrackEnd);
+            el.addEventListener('play', () => { isPlaying = true; updatePlayerUI(); });
+            el.addEventListener('pause', () => { isPlaying = false; updatePlayerUI(); });
+            el.addEventListener('timeupdate', updateProgressBar);
+        });
+
+        // --- Visualizer Engine ---
+        let audioCtx, analyser, source, dataArray;
+        let visualizerInitialized = false;
+
+        function initVisualizer() {
+            if (visualizerInitialized) return;
+            try {
+                // AudioContext must be started after a user gesture (like clicking play)
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                analyser = audioCtx.createAnalyser();
+                
+                // Route ONLY the local audio through Web Audio API to prevent CORS muting
+                source = audioCtx.createMediaElementSource(localAudioEl);
+                source.connect(analyser);
+                analyser.connect(audioCtx.destination);
+                
+                analyser.fftSize = 64; 
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                visualizerInitialized = true;
+                
+                animateVisualizer();
+            } catch (e) {
+                console.error("Web Audio API not supported", e);
+            }
+        }
+
+        function animateVisualizer() {
+            requestAnimationFrame(animateVisualizer);
+            
+            const bars = document.querySelectorAll('#audio-wave-vis .audio-wave span');
+            if (!bars.length || !visualizerInitialized) return;
+
+            if (isPlaying && !audioEl.paused) {
+                if (audioEl === localAudioEl && analyser) {
+                    // REAL frequency data mapped to UI bars (For user uploaded files)
+                    analyser.getByteFrequencyData(dataArray);
+                    for (let i = 0; i < bars.length; i++) {
+                        const dataIndex = Math.floor(i * (dataArray.length / bars.length));
+                        const value = dataArray[dataIndex];
+                        const heightPercent = Math.max(10, (value / 255) * 100);
+                        bars[i].style.height = `${heightPercent}%`;
+                    }
+                } else {
+                    // SIMULATED visualizer for cross-origin remote demo files
+                    for (let i = 0; i < bars.length; i++) {
+                        const fakeValue = Math.random() * 200 + 50; 
+                        const heightPercent = Math.max(10, (fakeValue / 255) * 100);
+                        bars[i].style.height = `${heightPercent}%`;
+                    }
+                }
+            } else {
+                // Return to flatline when paused
+                for (let i = 0; i < bars.length; i++) {
+                    bars[i].style.height = '10%';
+                }
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            
+            // Initial setup
+            if (queue.length > 0) {
+                queue[0].status = 'current';
+                loadCurrentTrack(false);
+            }
+            renderQueue();
+            switchView('listener');
+        });
+
+        // --- Core Audio Functions ---
+        function loadCurrentTrack(autoPlay = true) {
+            const track = queue[currentTrackIndex];
+            const playBtn = document.getElementById('play-pause-btn');
+            
+            // Stop previous active audio to prevent crossover
+            localAudioEl.pause();
+            remoteAudioEl.pause();
+            
+            if (track) {
+                // Determine which player to use (Blob/Uploaded goes to visualizer player, Remote goes to standard player)
+                audioEl = track.url.startsWith('blob:') ? localAudioEl : remoteAudioEl;
+                
+                if(audioEl.getAttribute('src') !== track.url) {
+                    audioEl.src = track.url;
+                    audioEl.load();
+                }
+                
+                if (playBtn) playBtn.disabled = false;
+                if (autoPlay && autoplayEnabled) {
+                    audioEl.play().catch(e => {
+                        console.warn("Autoplay blocked or source error:", e);
+                        isPlaying = false;
+                        updatePlayerUI();
+                    });
+                }
+            } else {
+                audioEl.removeAttribute('src');
+                isPlaying = false;
+                if (playBtn) playBtn.disabled = true;
+            }
+            
+            updatePlayerUI();
+            renderQueue();
+        }
+
+        function handleTrackEnd() {
+            logActivity('Track Complete', 'Transition');
+            if (queue.length > 1) {
+                queue[currentTrackIndex].status = 'played'; // Mark old as played
+                currentTrackIndex = (currentTrackIndex + 1) % queue.length;
+                queue[currentTrackIndex].status = 'current';
+                loadCurrentTrack(true);
+            } else if (queue.length === 1) {
+                // Just loop it if it's the only one
+                audioEl.currentTime = 0;
+                audioEl.play().catch(e => console.warn(e));
+            }
+        }
+
+        function togglePlay() {
+            if (!queue[currentTrackIndex] || !audioEl.hasAttribute('src')) return;
+            
+            // Connect visualizer on first interaction
+            if (!visualizerInitialized) {
+                initVisualizer();
+            }
+
+            if (isPlaying) {
+                audioEl.pause();
+            } else {
+                // Resume audio context if suspended by browser policy
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                audioEl.play().catch(e => {
+                    console.warn("Playback error:", e);
+                    isPlaying = false;
+                    updatePlayerUI();
+                });
+            }
+        }
+
+        function skipTrack(direction) {
+            if (queue.length <= 1) return;
+            
+            queue[currentTrackIndex].status = 'upcoming'; // Reset current
+            
+            if (direction > 0) {
+                currentTrackIndex = (currentTrackIndex + 1) % queue.length;
+            } else {
+                currentTrackIndex = (currentTrackIndex - 1 + queue.length) % queue.length;
+            }
+            
+            queue[currentTrackIndex].status = 'current';
+            loadCurrentTrack(true);
+            logActivity('Track Skipped', 'User Action');
+        }
+
+        function playSpecificTrack(index) {
+            if (queue[currentTrackIndex]) queue[currentTrackIndex].status = 'upcoming';
+            currentTrackIndex = index;
+            queue[currentTrackIndex].status = 'current';
+            loadCurrentTrack(true);
+        }
+
+        // --- Volume & Progress ---
+        function handleVolumeChange(e) {
+            volume = parseFloat(e.target.value);
+            if (volume > 0 && isMuted) isMuted = false;
+            applyVolume(true);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            applyVolume(false);
+        }
+
+        function applyVolume(fromSlider = false) {
+            localAudioEl.volume = isMuted ? 0 : volume;
+            remoteAudioEl.volume = isMuted ? 0 : volume;
+            
+            if (!fromSlider) {
+                const slider = document.getElementById('volume-slider');
+                if (slider) slider.value = isMuted ? 0 : volume;
+            }
+            const iconOn = document.getElementById('volume-icon-on');
+            const iconOff = document.getElementById('volume-icon-off');
+            if (iconOn && iconOff) {
+                if (isMuted || volume === 0) {
+                    iconOn.classList.add('hidden-view');
+                    iconOff.classList.remove('hidden-view');
+                } else {
+                    iconOn.classList.remove('hidden-view');
+                    iconOff.classList.add('hidden-view');
+                }
+            }
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgressBar() {
+            const currentEl = document.getElementById('current-time');
+            const totalEl = document.getElementById('total-time');
+            const bar = document.getElementById('progress-bar');
+            const knob = document.getElementById('progress-knob');
+            
+            if (audioEl.duration) {
+                currentEl.textContent = formatTime(audioEl.currentTime);
+                totalEl.textContent = formatTime(audioEl.duration);
+                const percent = (audioEl.currentTime / audioEl.duration) * 100;
+                bar.style.width = `${percent}%`;
+                knob.style.left = `${percent}%`;
+            }
+        }
+
+        function seekTrack(e) {
+            if(!audioEl.duration) return;
+            const container = document.getElementById('progress-container');
+            const rect = container.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percent = Math.max(0, Math.min(1, clickX / rect.width));
+            audioEl.currentTime = percent * audioEl.duration;
+        }
+
+        // --- Render UI Updates ---
+        function updatePlayerUI() {
+            const track = queue[currentTrackIndex];
+            
+            // Text data
+            document.getElementById('current-track-title').textContent = track ? track.title : 'Queue Empty';
+            document.getElementById('current-track-artist').textContent = track ? track.artist : 'Add tracks in Studio';
+            
+            let trackTypeText = 'Standby';
+            if (track) {
+                trackTypeText = track.type === 'commercial' ? 'Sponsor Spot' : (track.type === 'talk' ? 'Talk Segment' : 'Now Broadcasting');
+            }
+            document.getElementById('current-track-type').textContent = trackTypeText;
+            
+            // Album Art
+            const svgFallback = document.getElementById('album-art-fallback');
+            const imgArt = document.getElementById('album-art-img');
+            if (track && track.artUrl) {
+                imgArt.src = track.artUrl;
+                imgArt.classList.remove('hidden-view');
+                if (svgFallback) svgFallback.classList.add('hidden-view');
+            } else {
+                imgArt.classList.add('hidden-view');
+                if (svgFallback) svgFallback.classList.remove('hidden-view');
+            }
+            
+            // Icons & Status
+            const playIcon = document.getElementById('play-icon');
+            const waveVis = document.getElementById('audio-wave-vis');
+            const liveDot = document.getElementById('player-live-dot');
+            const liveText = document.getElementById('player-live-text');
+            
+            if (isPlaying) {
+                if(playIcon) {
+                    playIcon.setAttribute('data-lucide', 'pause');
+                    playIcon.classList.remove('ml-1');
+                }
+                if(waveVis) waveVis.classList.replace('opacity-20', 'opacity-80');
+                if(liveDot) liveDot.className = 'w-2 h-2 rounded-full bg-red-500 live-indicator';
+                if(liveText) {
+                    liveText.textContent = 'Live';
+                    liveText.classList.replace('text-gray-400', 'text-white');
+                }
+            } else {
+                if(playIcon) {
+                    playIcon.setAttribute('data-lucide', 'play');
+                    playIcon.classList.add('ml-1');
+                }
+                if(waveVis) waveVis.classList.replace('opacity-80', 'opacity-20');
+                if(liveDot) liveDot.className = 'w-2 h-2 rounded-full bg-gray-500';
+                if(liveText) {
+                    liveText.textContent = 'Standby';
+                    liveText.classList.replace('text-white', 'text-gray-400');
+                }
+            }
+            lucide.createIcons();
+        }
+
+        function renderQueue() {
+            const queueContainer = document.getElementById('admin-queue');
+            const previewContainer = document.getElementById('preview-queue');
+            
+            if (!queueContainer) return;
+
+            document.getElementById('admin-queue-count').textContent = `${queue.length} Tracks`;
+            document.getElementById('preview-count').textContent = `${queue.length} Tracks`;
+            document.getElementById('stat-tracks').textContent = queue.length;
+            
+            if (queue.length === 0) {
+                queueContainer.innerHTML = '<div class="text-center p-8 text-[#C1F6ED]/50 text-sm">Queue is empty. Upload audio to begin.</div>';
+                if (previewContainer) previewContainer.innerHTML = '<div class="text-sm text-gray-500">No upcoming tracks</div>';
+                return;
+            }
+
+            // Admin Queue View
+            queueContainer.innerHTML = queue.map((item, index) => {
+                const isCurrent = index === currentTrackIndex;
+                const activeClass = isCurrent ? 'border-primary/40 bg-primary/10' : 'border-white/5 bg-dark/50 hover:border-primary/20';
+                
+                let iconClass = 'bg-primary/10 text-primary';
+                let iconName = 'music';
+                
+                if (item.type === 'commercial') { iconClass = 'bg-accent/10 text-accent'; iconName = 'megaphone'; }
+                if (item.type === 'talk') { iconClass = 'bg-secondary/10 text-secondary'; iconName = 'mic'; }
+
+                let artHtml = item.artUrl 
+                    ? `<img src="${item.artUrl}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-white/10" />`
+                    : `<div class="w-12 h-12 rounded-lg ${iconClass} flex items-center justify-center flex-shrink-0"><i data-lucide="${iconName}" class="w-5 h-5"></i></div>`;
+
+                return `
+                <div class="queue-item p-4 rounded-xl transition-all border flex items-center gap-4 ${activeClass}">
+                    ${artHtml}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-base font-medium ${isCurrent ? 'text-primary' : 'text-white'} truncate">${item.title}</span>
+                            ${isCurrent ? '<span class="px-2 py-0.5 rounded bg-primary text-darker text-[10px] uppercase font-bold tracking-wider">NOW PLAYING</span>' : ''}
+                        </div>
+                        <div class="text-xs text-[#C1F6ED]/60 truncate">${item.artist}</div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="playSpecificTrack(${index})" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors" title="Play">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="triggerArtUpload(${index})" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-primary transition-colors" title="Add Cover Art">
+                            <i data-lucide="image" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="removeFromQueue(${index})" class="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors" title="Remove">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            // Preview Queue (Listener View)
+            if (previewContainer) {
+                const upcoming = [];
+                for(let i=1; i<=3; i++) {
+                    const nextIndex = (currentTrackIndex + i) % queue.length;
+                    // Don't duplicate if queue is small
+                    if (queue.length > i) upcoming.push(queue[nextIndex]);
+                }
+                
+                if (upcoming.length === 0) {
+                    previewContainer.innerHTML = '<div class="text-sm text-[#C1F6ED]/50 py-2">End of queue.</div>';
+                } else {
+                    previewContainer.innerHTML = upcoming.map((item, i) => `
+                        <div class="flex items-center gap-3 text-sm p-2 rounded-lg hover:bg-white/5 transition-colors cursor-default">
+                            <div class="w-8 h-8 rounded bg-dark border border-primary/20 flex items-center justify-center text-xs font-medium text-primary/70">0${i + 1}</div>
+                            <div class="flex-1 truncate text-gray-300">
+                                <div class="font-medium text-sm text-[#C1F6ED]">${item.title}</div>
+                                <div class="text-[10px] text-gray-500">${item.artist}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+            
+            lucide.createIcons();
+        }
+
+        // --- View & File Management ---
+        function switchView(view) {
+            if (view === 'admin' && !isAuthenticated) {
+                view = 'login';
+            }
+            
+            currentView = view;
+            const listenerView = document.getElementById('listener-view');
+            const adminView = document.getElementById('admin-view');
+            const loginView = document.getElementById('login-view');
+            
+            listenerView.classList.add('hidden');
+            adminView.classList.add('hidden');
+            if (loginView) {
+                loginView.classList.add('hidden');
+                loginView.classList.remove('flex');
+            }
+            
+            if (view === 'listener') {
+                listenerView.classList.remove('hidden');
+            } else if (view === 'login') {
+                if (loginView) {
+                    loginView.classList.remove('hidden');
+                    loginView.classList.add('flex');
+                }
+            } else {
+                adminView.classList.remove('hidden');
+            }
+            
+            const mobileMenu = document.getElementById('mobile-menu');
+            if(mobileMenu) mobileMenu.classList.add('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            
+            if (pass === 'thinkerRadio7767') {
+                isAuthenticated = true;
+                errorEl.classList.add('hidden-view');
+                document.getElementById('login-password').value = '';
+                showToast("Access Granted", "Welcome to the Studio");
+                switchView('admin');
+            } else {
+                errorEl.textContent = 'Incorrect password.';
+                errorEl.classList.remove('hidden-view');
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const typeRadio = document.querySelector('input[name="upload-type"]:checked');
+            const type = typeRadio ? typeRadio.value : 'music';
+            const objectUrl = URL.createObjectURL(file);
+
+            const newTrack = {
+                id: Date.now(),
+                title: file.name.replace(/\.[^/.]+$/, ""),
+                artist: type === 'commercial' ? "Sponsor Spot" : (type === 'talk' ? "Station ID" : "Local Audio"),
+                type: type,
+                status: "upcoming",
+                url: objectUrl,
+                artUrl: null
+            };
+            
+            queue.push(newTrack);
+            event.target.value = '';
+            
+            if (queue.length === 1) {
+                currentTrackIndex = 0;
+                loadCurrentTrack(true);
+            } else {
+                renderQueue();
+            }
+            showToast('Upload Successful', `${newTrack.title} added to queue`);
+            logActivity(`Uploaded: ${newTrack.title}`, 'Upload');
+        }
+        
+        function removeFromQueue(index) {
+            if (confirm('Remove this item from queue?')) {
+                const trackToRemove = queue[index];
+                queue.splice(index, 1);
+                
+                if (queue.length === 0) {
+                    currentTrackIndex = 0;
+                    loadCurrentTrack(false);
+                } else if (index === currentTrackIndex) {
+                    currentTrackIndex = index % queue.length; // Play next
+                    loadCurrentTrack(true);
+                } else if (index < currentTrackIndex) {
+                    currentTrackIndex -= 1; // Adjust index to maintain current track
+                }
+                
+                renderQueue();
+                showToast('Item Removed', 'Removed from broadcast queue');
+                logActivity(`Removed: ${trackToRemove.title}`, 'Action');
+            }
+        }
+        
+        function clearQueue() {
+            if (confirm('Clear entire queue?')) {
+                queue = [];
+                currentTrackIndex = 0;
+                loadCurrentTrack(false);
+                showToast('Queue Cleared', 'All items removed');
+                logActivity('Queue Cleared', 'Action');
+            }
+        }
+
+        // --- Cover Art Upload ---
+        function triggerArtUpload(index) {
+            currentArtTrackIndex = index;
+            document.getElementById('art-uploader').click();
+        }
+
+        function handleArtUpload(event) {
+            const file = event.target.files[0];
+            if (!file || currentArtTrackIndex === null) return;
+            
+            const objectUrl = URL.createObjectURL(file);
+            queue[currentArtTrackIndex].artUrl = objectUrl;
+            
+            renderQueue();
+            if (currentTrackIndex === currentArtTrackIndex) {
+                updatePlayerUI();
+            }
+            
+            showToast('Artwork Added', 'Cover art attached to track');
+            event.target.value = '';
+            currentArtTrackIndex = null;
+        }
+
+        // --- Utilities & Demos ---
+        function addCommercial() {
+            const newCommercial = {
+                id: Date.now(),
+                title: "Test Ad " + Math.floor(Math.random() * 100),
+                artist: "Sponsor Auto-Gen",
+                type: "commercial",
+                status: "upcoming",
+                url: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/Flipping_through_a_book.ogg', // CORS-friendly fallback URL
+                artUrl: null
+            };
+            queue.push(newCommercial);
+            renderQueue();
+            showToast('Commercial Added', 'Sponsor spot added to queue');
+            logActivity(`Generated: ${newCommercial.title}`, 'System');
+        }
+
+        function saveQueue() {
+            showToast('Queue Saved', 'Broadcast queue synced to cloud');
+        }
+
+        function shareStream() {
+            const streamUrl = "https://osaradio.com";
+            const tempInput = document.createElement("input");
+            tempInput.value = streamUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand("copy");
+                showToast("Link Copied", "Stream URL copied to clipboard!");
+            } catch (err) {
+                console.error("Failed to copy link", err);
+                showToast("Error", "Could not copy link");
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        function toggleAutoplay() {
+            autoplayEnabled = !autoplayEnabled;
+            const knob = document.getElementById('autoplay-knob');
+            const toggle = document.getElementById('autoplay-toggle');
+            
+            if (autoplayEnabled) {
+                knob.classList.add('translate-x-6');
+                knob.classList.remove('translate-x-0.5');
+                toggle.classList.add('bg-primary/20', 'border-primary/30');
+                toggle.classList.remove('bg-gray-700/50', 'border-gray-600');
+            } else {
+                knob.classList.remove('translate-x-6');
+                knob.classList.add('translate-x-0.5');
+                toggle.classList.remove('bg-primary/20', 'border-primary/30');
+                toggle.classList.add('bg-gray-700/50', 'border-gray-600');
+            }
+        }
+
+        function logActivity(eventText, typeText) {
+            const tbody = document.getElementById('activity-log');
+            if(!tbody) return;
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            let badgeClass = 'bg-primary/10 text-primary border-primary/20';
+            if(typeText === 'Upload') badgeClass = 'bg-secondary/10 text-secondary border-secondary/20';
+            if(typeText === 'System') badgeClass = 'bg-accent/10 text-accent border-accent/20';
+            
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-white/5 transition-colors animate-fade-in';
+            row.innerHTML = `
+                <td class="py-4 px-2 text-[#C1F6ED]/70">${time}</td>
+                <td class="py-4 text-white font-medium">${eventText}</td>
+                <td class="py-4"><span class="px-2 py-1 rounded-full ${badgeClass} text-xs border">Log</span></td>
+                <td class="py-4"><span class="flex items-center gap-1.5 text-[#C1F6ED]/50 text-xs">Recorded</span></td>
+            `;
+            tbody.insertBefore(row, tbody.firstChild);
+            
+            // Keep log from growing forever
+            if (tbody.children.length > 8) {
+                tbody.removeChild(tbody.lastChild);
+            }
+        }
+
+        function showToast(title, message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Simulate listener count
+        setInterval(() => {
+            const countEl = document.getElementById('listener-count');
+            if (countEl && currentView === 'listener') {
+                const current = parseInt(countEl.textContent.replace(',', ''));
+                const change = Math.floor(Math.random() * 10) - 5;
+                const newCount = Math.max(1000, current + change);
+                countEl.textContent = newCount.toLocaleString();
+            }
+        }, 5000);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                togglePlay();
+            }
+        });
+    </script>
+</body>
+</html>                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                        },
+                        'wave': {
+                            '0%, 100%': { height: '10%' },
+                            '50%': { height: '100%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #02353C;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(46, 175, 125, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(63, 208, 201, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(249, 115, 22, 0.1) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+        
+        .glass {
+            background: rgba(3, 74, 84, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(63, 208, 201, 0.15);
+        }
+        
+        .glass-strong {
+            background: rgba(1, 28, 32, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(63, 208, 201, 0.2);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3FD0C9 0%, #2EAF7D 50%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 30px;
+        }
+        
+        .audio-wave span {
+            width: 4px;
+            background: linear-gradient(to top, #3FD0C9, #2EAF7D);
+            border-radius: 2px;
             animation: wave 1.2s ease-in-out infinite;
         }
         
